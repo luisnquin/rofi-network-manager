@@ -5,7 +5,7 @@ Inspired from [rofi-wifi-menu](https://github.com/zbaylin/rofi-wifi-menu).
 
 > **Warning**
 >
-> Ensure to add your user to the "networkmanager" group :) in order to prevent privilege errors
+> Ensure to add your user to the "networkmanager" group in order to prevent privilege errors :)
 
 ## Table of Contents
 
