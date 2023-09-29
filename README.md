@@ -49,8 +49,8 @@ Inspired from [rofi-wifi-menu](https://github.com/zbaylin/rofi-wifi-menu).
 
 ### Screenshots
 
-![Desktop](desktop.png)
-![Options](options.png)
+![Desktop](./desktop.png)
+![Options](./options.png)
 
 ### Config
 
