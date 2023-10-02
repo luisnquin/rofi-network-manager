@@ -222,7 +222,7 @@ connect() {
 	# printf "SSID: %s  PWD: %s etc: %s\n" "$1" "$2" "${WIRELESS_INTERFACES[WLAN_INT]}"
 
 	# Error: Connection activation failed: Secrets were required, but not provided.
-	if [[ $(nmcli dev wifi con "$1" password "$2" ifname "${WIRELESS_INTERFACES[WLAN_INT]}" | grep -c "successfully activated") -eq "1" ]]; then
+	if [[ $(nmcli dev wifi connect "$1" password "$2" ifname "${WIRELESS_INTERFACES[WLAN_INT]}" | grep -c "successfully activated") -eq "1" ]]; then
 		notify "Connection_Established" "You're now connected to Wi-Fi network '$1'"
 	else
 		notify "Connection_Error" "Connection cannot be established"
@@ -240,7 +240,7 @@ enter_ssid() {
 stored_connection() {
 	check_wifi_connected
 	notify "-t 0 Wi-Fi" "Connecting to $1"
-	{ [[ $(nmcli dev wifi con "$1" ifname "${WIRELESS_INTERFACES[WLAN_INT]}" | grep -c "successfully activated") -eq "1" ]] && notify "Connection_Established" "You're now connected to Wi-Fi network '$1'"; } || notify "Connection_Error" "Connection can not be established"
+	{ [[ $(nmcli dev wifi connect "$1" ifname "${WIRELESS_INTERFACES[WLAN_INT]}" | grep -c "successfully activated") -eq "1" ]] && notify "Connection_Established" "You're now connected to Wi-Fi network '$1'"; } || notify "Connection_Error" "Connection can not be established"
 }
 
 ssid_manual() {
@@ -414,15 +414,24 @@ selection_action() {
 				SSID=$(echo "$SELECTION" | sed "s/\s\{2,\}/\|/g " | awk -F "|" '{print $3}')
 			fi
 
+			set_identifier=""
+
+			if [[ "$SSID" =~ ^[A-Za-z0-9_-]+$ ]]; then
+				set_identifier="$SSID"
+			else
+				BSSID=$(nmcli device wifi list | grep "$SSID" | awk '{print $1}')
+				set_identifier="$BSSID"
+			fi
+
 			if [[ "$ACTIVE_SSID" == "$SSID" ]]; then
-				nmcli con up "$SSID" ifname "${WIRELESS_INTERFACES[WLAN_INT]}"
+				nmcli con up "$set_identifier" ifname "${WIRELESS_INTERFACES[WLAN_INT]}"
 			else
 				if [[ "$SELECTION" =~ "WPA2" || "$SELECTION" =~ "WEP" ]]; then
 					enter_password
 				fi
 
 				if [[ -n "$PASS" && "$PASS" != "$IF_PWD_IS_STORED_MESSAGE" ]]; then
-					connect "$SSID" "$PASS"
+					connect "$set_identifier" "$PASS"
 				else
 					stored_connection "$SSID"
 				fi
