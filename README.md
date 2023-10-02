@@ -117,7 +117,7 @@ background-selection:#e34039;     //Selection_bg
 ```
 git clone https://github.com/P3rf/rofi-network-manager.git
 cd rofi-network-manager
-bash "./rofi-network-manager.sh"
+bash "./rofi-network-manager.bash"
 ```
 
 ### Examples-Usage
@@ -133,12 +133,12 @@ unknown-as-up = true
 format-connected-background = ${colors.background}
 format-connected-foreground = ${colors.foreground}
 format-connected-padding = 1
-format-connected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.sh:}<ramp-signal> <label-connected>%{A}
+format-connected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.bash:}<ramp-signal> <label-connected>%{A}
 label-connected = %essid%/%local_ip%
 format-disconnected-background = ${colors.background}
 format-disconnected-foreground = ${colors.foreground}
 format-disconnected-padding = 1
-format-disconnected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.sh:}<label-disconnected>%{A}
+format-disconnected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.bash:}<label-disconnected>%{A}
 label-disconnected =""
 ramp-signal-0 = "󰤯"
 ramp-signal-1 = "󰤟"
@@ -156,12 +156,12 @@ interval = 3.0
 format-connected-background = ${colors.background}
 format-connected-foreground = ${colors.foreground}
 format-connected-padding = 1
-format-connected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.sh:}<label-connected>%{A}
+format-connected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.bash:}<label-connected>%{A}
 label-connected =  %local_ip%
 format-disconnected-background = ${colors.background}
 format-disconnected-foreground = ${colors.foreground-alt}
 format-disconnected-padding = 1
-format-disconnected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.sh:}<label-disconnected>%{A}
+format-disconnected = %{A1:$HOME/.../rofi-network-manager/rofi-network-manager.bash:}<label-disconnected>%{A}
 label-disconnected ="󰌺"
 ```
 

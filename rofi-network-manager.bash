@@ -149,7 +149,7 @@ rofi_cmd() {
 	fi
 
 	rofi -dmenu -i -location "$LOCATION" \
-		-yoffset "$Y_AXIS" -xoffset "$X_AXIS" $3 \
+		-yoffset "$Y_AXIS" -xoffset "$X_AXIS" "$3" \
 		-theme "$RASI_DIR" -theme-str 'window{width: '"$WIDTH"'em;}textbox-prompt-colon{str:"'"$PROMPT"':";}'"$4"''
 }
 

@@ -20,7 +20,7 @@ with pkgs;
     ];
 
     postPatch = ''
-      substituteInPlace ./${name}.sh \
+      substituteInPlace ./${name}.bash \
         --replace 'DIR="$(cd "$(dirname "''${BASH_SOURCE[0]}")" && pwd)"' 'DIR=${placeholder "out"}/share'
     '';
 
@@ -28,7 +28,7 @@ with pkgs;
       runHook preInstall
 
       mkdir -p $out/bin/
-      cp ./${name}.sh $out/bin/${name}
+      cp ./${name}.bash $out/bin/${name}
       chmod +x $out/bin/${name}
 
       runHook postInstall
