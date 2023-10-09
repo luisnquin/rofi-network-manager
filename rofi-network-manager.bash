@@ -1,5 +1,7 @@
 #!/bin/bash
 # Default Values
+ICONS_DIR="$PWD/assets/icons"
+
 QRCODE_LOCATION=$LOCATION
 QRCODE_DIR="/tmp/"
 
@@ -65,9 +67,22 @@ init() {
 }
 
 notify() {
-	echo "$2"
+	SUBJECT="$1"
+	BODY="$2"
+	ICON="$3"
 
-	[[ "$NOTIFICATIONS" == "true" && -x "$(command -v notify-send)" ]] && notify-send -r "5" -u "normal" "$1" "$2"
+	printf 'a notification might be sent... {"subject": "%s", "body": "%s", "icon_path": "%s"}\n' "$SUBJECT" "$BODY" "$ICON"
+
+	if [[ "$NOTIFICATIONS" != "true" ]]; then
+		echo "notifications are not enable so nothing to send"
+		return
+	fi
+
+	if [[ -x "$(command -v dunstify)" ]]; then
+		dunstify -u normal -i "$ICON" "$SUBJECT" "$BODY"
+	elif [[ -x "$(command -v notify-send)" ]]; then
+		notify-send -r "5" -u "normal" "$SUBJECT" "$BODY" -i "$ICON"
+	fi
 }
 
 wireless_interface_state() {
@@ -167,11 +182,15 @@ change_wireless_interface() {
 
 scan() {
 	[[ "$WIFI_CON_STATE" =~ "unavailable" ]] && change_wifi_state "Wi-Fi" "Enabling Wi-Fi connection" "on" && sleep 2
-	notify "-t 0 Wifi" "Please Wait Scanning"
+
+	notify "Please wait scanning" "" "$ICONS_DIR/hourglass.png"
+
 	WIFI_LIST=$(nmcli --fields SSID,SECURITY,BARS device wifi list ifname "${WIRELESS_INTERFACES[WLAN_INT]}" --rescan yes)
+
 	wifi_list
 	wireless_interface_state && ethernet_interface_state
-	notify "-t 1 Wifi" "Please Wait Scanning"
+
+	notify "Please wait scanning" "" "$ICONS_DIR/hourglass.png"
 	rofi_menu
 }
 
@@ -195,22 +214,26 @@ wifi_list() {
 }
 
 change_wifi_state() {
-	notify "$1" "$2"
+	notify "$1" "$2" "$ICONS_DIR/wifi-$3.png"
 	nmcli radio wifi "$3"
 }
+
 change_wired_state() {
-	notify "$1" "$2"
+	notify "$1" "$2" "$ICONS_DIR/ethernet-$3.png"
 	nmcli device "$3" "$4"
 }
+
 net_restart() {
-	notify "$1" "$2"
+	notify "$1" "$2" "$ICONS_DIR/wifi-load.png"
 	nmcli networking off && sleep 3 && nmcli networking on
 }
+
 disconnect() {
 	ACTIVE_SSID=$(nmcli -t -f GENERAL.CONNECTION dev show "${WIRELESS_INTERFACES[WLAN_INT]}" | cut -d ':' -f2)
 	notify "$1" "You're now disconnected from Wi-Fi network '$ACTIVE_SSID'"
 	nmcli con down id "$ACTIVE_SSID"
 }
+
 check_wifi_connected() {
 	[[ "$(nmcli device status | grep "^${WIRELESS_INTERFACES[WLAN_INT]}." | awk '{print $3}')" == "connected" ]] && disconnect "Connection_Terminated"
 }
@@ -218,14 +241,14 @@ check_wifi_connected() {
 connect() {
 	check_wifi_connected
 
-	notify "-t 0 Wi-Fi" "Connecting to $1"
+	notify "Connecting to $1" "" "$ICONS_DIR/wifi-load.png"
 	# printf "SSID: %s  PWD: %s etc: %s\n" "$1" "$2" "${WIRELESS_INTERFACES[WLAN_INT]}"
 
 	# Error: Connection activation failed: Secrets were required, but not provided.
 	if [[ $(nmcli dev wifi connect "$1" password "$2" ifname "${WIRELESS_INTERFACES[WLAN_INT]}" | grep -c "successfully activated") -eq "1" ]]; then
-		notify "Connection_Established" "You're now connected to Wi-Fi network '$1'"
+		notify "Connection_Established" "You're now connected to Wi-Fi network '$1'" "$ICONS_DIR/wifi.png"
 	else
-		notify "Connection_Error" "Connection cannot be established"
+		notify "Connection_Error" "Connection cannot be established" "$ICONS_DIR/wifi-fail.png"
 	fi
 }
 
@@ -239,7 +262,7 @@ enter_ssid() {
 
 stored_connection() {
 	check_wifi_connected
-	notify "-t 0 Wi-Fi" "Connecting to $1"
+	notify "Connecting to $1" "" "$ICONS_DIR/wifi-load2.png"
 	{ [[ $(nmcli dev wifi connect "$1" ifname "${WIRELESS_INTERFACES[WLAN_INT]}" | grep -c "successfully activated") -eq "1" ]] && notify "Connection_Established" "You're now connected to Wi-Fi network '$1'"; } || notify "Connection_Error" "Connection can not be established"
 }
 
@@ -260,7 +283,7 @@ ssid_hidden() {
 			nmcli con modify "$SSID" wifi-sec.key-mgmt wpa-psk
 			nmcli con modify "$SSID" wifi-sec.psk "$PASS"
 		} || [[ $(nmcli -g NAME con show | grep -c "$SSID") -eq "0" ]] && nmcli con add type wifi con-name "$SSID" ssid "$SSID" ifname "${WIRELESS_INTERFACES[WLAN_INT]}"
-		notify "-t 0 Wifi" "Connecting to $SSID"
+		notify "Connecting to $SSID" "" "$ICONS_DIR/wifi-load2.png"
 		{ [[ $(nmcli con up id "$SSID" | grep -c "successfully activated") -eq "1" ]] && notify "Connection_Established" "You're now connected to Wi-Fi network '$SSID'"; } || notify "Connection_Error" "Connection can not be established"
 	}
 }
@@ -352,14 +375,16 @@ vpn() {
 	if [[ -n "$VPN_ACTION" ]]; then
 		if [[ "$VPN_ACTION" =~ "~Deactivate" ]]; then
 			nmcli connection down "$ACTIVE_VPN"
-			notify "VPN_Deactivated" "$ACTIVE_VPN"
+			notify "VPN_Deactivated" "$ACTIVE_VPN" "$ICONS_DIR/warning.png"
 		else
-			notify "-t 0 Activating_VPN" "$VPN_ACTION"
+			notify "-t 0 Activating_VPN" "$VPN_ACTION" "$ICONS_DIR/mask.png"
+
 			VPN_OUTPUT=$(nmcli connection up "$VPN_ACTION" 2>/dev/null)
+
 			if [[ $(echo "$VPN_OUTPUT" | grep -c "Connection successfully activated") -eq "1" ]]; then
-				notify "VPN_Successfully_Activated" "$VPN_ACTION"
+				notify "VPN_Successfully_Activated" "$VPN_ACTION" "$ICONS_DIR/mask.png"
 			else
-				notify "Error_Activating_VPN" "Check your configuration for $VPN_ACTION"
+				notify "Error_Activating_VPN" "Check your configuration for $VPN_ACTION" "$ICONS_DIR/alert.png"
 			fi
 		fi
 	fi
@@ -403,7 +428,7 @@ selection_action() {
 	"***Wired Unavailable***") ;;
 	"***Wired Initializing***") ;;
 	"~Change Wifi Interface") change_wireless_interface ;;
-	"~Restart Network") net_restart "Network" "Restarting Network" ;;
+	"~Restart Network") net_restart "Network" "Restarting network" ;;
 	"~QrCode") gen_qrcode ;;
 	"~More Options") more_options ;;
 	"~Open Connection Editor") nm-connection-editor ;;
